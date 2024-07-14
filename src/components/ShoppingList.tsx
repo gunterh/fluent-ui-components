@@ -28,7 +28,7 @@ interface ListItem {
 }
 
 export const ShoppingList = () => {
-  const [items, setItems] = useState<ListItem[]>([
+  const [items] = useState<ListItem[]>([
     { name: "Apples", price: 0.5 },
     { name: "Oranges", price: 0.4 },
     { name: "Bananas", price: 0.3 },
