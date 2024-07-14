@@ -1,5 +1,20 @@
-import { makeStyles, Text, tokens } from "@fluentui/react-components";
-import { Fragment, useState } from "react";
+import {
+  Button,
+  makeStyles,
+  Text,
+  tokens,
+  Dialog,
+  DialogTrigger,
+  DialogSurface,
+  DialogTitle,
+  DialogContent,
+  DialogBody,
+  DialogActions,
+  Input,
+  useId,
+} from "@fluentui/react-components";
+import { bundleIcon, DeleteFilled, DeleteRegular } from "@fluentui/react-icons";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 // Styles
 const useStyles = makeStyles({
@@ -11,61 +26,86 @@ const useStyles = makeStyles({
   },
   header: {
     background: tokens.colorNeutralBackground1,
+    display: "grid",
+    gap: tokens.spacingVerticalM,
     position: "sticky",
     top: 0,
     padding: tokens.spacingVerticalM,
+    width: "100%",
+    zIndex: 1,
+    justifyContent: "center",
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "1fr auto 1fr auto",
+    alignItems: "center",
     gap: tokens.spacingVerticalL,
+  },
+  input: {
+    width: "50px",
+  },
+  inputPrice: {
+    width: "100px",
   },
 });
 
 interface ListItem {
   name: string;
-  price: number;
+  price?: number;
+  quantity: number;
 }
 
+// Icons
+const DeleteIcon = bundleIcon(DeleteFilled, DeleteRegular);
+
 export const ShoppingList = () => {
-  const [items] = useState<ListItem[]>([
-    { name: "Apples", price: 0.5 },
-    { name: "Oranges", price: 0.4 },
-    { name: "Bananas", price: 0.3 },
-    { name: "Tomatoes", price: 0.6 },
-    { name: "Carrots", price: 0.2 },
-    { name: "Lettuce", price: 0.4 },
-    { name: "Spinach", price: 0.5 },
-    { name: "Chicken", price: 3.5 },
-    { name: "Beef", price: 5.0 },
-    { name: "Pork", price: 4.0 },
-    { name: "Salmon", price: 6.0 },
-    { name: "Shrimp", price: 8.0 },
-    { name: "Crab", price: 10.0 },
-    { name: "Lobster", price: 12.0 },
-    { name: "Butter", price: 2.0 },
-    { name: "Flour", price: 1.0 },
-    { name: "Sugar", price: 1.0 },
-    { name: "Eggs", price: 2.0 },
-    { name: "Milk", price: 3.0 },
-    { name: "Cheese", price: 4.0 },
-    { name: "Yogurt", price: 2.0 },
-    { name: "Ice Cream", price: 5.0 },
-    { name: "Chocolate", price: 3.0 },
-    { name: "Coffee", price: 6.0 },
-    { name: "Tea", price: 4.0 },
-    { name: "Wine", price: 10.0 },
-    { name: "Beer", price: 5.0 },
-    { name: "Whiskey", price: 20.0 },
-    { name: "Vodka", price: 15.0 },
-    { name: "Rum", price: 10.0 },
-    { name: "Tequila", price: 12.0 },
-    { name: "Brandy", price: 8.0 },
-    { name: "Gin", price: 10.0 },
-    { name: "Champagne", price: 15.0 },
-  ]);
+  const [items, setItems] = useState<ListItem[]>(() => {
+    const items = localStorage.getItem("items");
+    return items ? JSON.parse(items) : [];
+  });
+  const beforeLabelId = useId("before-label");
+
+  useEffect(() => {
+    saveItemsInLocalStorage(items);
+  }, [items]);
+
   const classes = useStyles();
-  const total = items.reduce((acc, item) => acc + item.price, 0);
+  const total = items.reduce(
+    (acc, item) => acc + (item.price || 0) * item.quantity,
+    0
+  );
+
+  const handleDeleteItem = (name: string) => {
+    setItems((_items) => _items.filter((item) => item.name !== name));
+  };
+
+  const handleAddItem = (name: string) => {
+    if (!name) return;
+    setItems((_items) => [..._items, { name, quantity: 1 }]);
+  };
+
+  const handleUpdateQuantity = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.name;
+    const quantity = parseInt(e.target.value);
+    if (quantity > 99) return;
+    setItems((_items) =>
+      _items.map((item) => (item.name === name ? { ...item, quantity } : item))
+    );
+  };
+
+  const handleUpdatePrice = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.name;
+    const price = parseFloat(e.target.value);
+    if (price > 9999) return;
+    setItems((_items) =>
+      _items.map((item) => (item.name === name ? { ...item, price } : item))
+    );
+  };
+
+  const saveItemsInLocalStorage = (value: ListItem[]) => {
+    localStorage.setItem("items", JSON.stringify(value));
+  };
+
   return (
     <div className={classes.root}>
       <div className={classes.header}>
@@ -78,21 +118,85 @@ export const ShoppingList = () => {
             currency: "AUD",
           })}
         </Text>
+        <AddItem onAddItem={handleAddItem} />
       </div>
 
       <div className={classes.grid}>
         {items.map((item) => (
           <Fragment key={item.name}>
-            <div key={item.name}>{item.name}</div>
-            <div>
-              {item.price.toLocaleString("en-AU", {
-                style: "currency",
-                currency: "AUD",
-              })}
-            </div>
+            <Text size={400}>{item.name}</Text>
+            <Input
+              type="number"
+              name={item.name}
+              value={item.quantity.toString()}
+              className={classes.input}
+              onChange={handleUpdateQuantity}
+              contentBefore={
+                <Text size={400} id={beforeLabelId}>
+                  x
+                </Text>
+              }
+            />
+            <Input
+              type="number"
+              name={item.name}
+              value={item.price ? item.price.toString() : ""}
+              className={classes.inputPrice}
+              onChange={handleUpdatePrice}
+              contentBefore={
+                <Text size={400} id={beforeLabelId}>
+                  $
+                </Text>
+              }
+            />
+            <Button
+              icon={<DeleteIcon />}
+              appearance="transparent"
+              onClick={() => handleDeleteItem(item.name)}
+            />
           </Fragment>
         ))}
       </div>
     </div>
+  );
+};
+
+export const AddItem = ({
+  onAddItem,
+}: {
+  onAddItem: (name: string) => void;
+}) => {
+  const inputId = useId("input");
+  const styles = useStyles();
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <Dialog modalType="modal">
+      <DialogTrigger disableButtonEnhancement>
+        <Button>Add Item</Button>
+      </DialogTrigger>
+      <DialogSurface aria-describedby={undefined}>
+        <DialogBody>
+          <DialogTitle>Add new item</DialogTitle>
+          <DialogContent>
+            <div className={styles.root}>
+              <Input ref={ref} id={inputId} />
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <DialogTrigger disableButtonEnhancement>
+              <Button
+                appearance="primary"
+                onClick={() => onAddItem(ref.current?.value || "")}
+              >
+                Add
+              </Button>
+            </DialogTrigger>
+            <DialogTrigger disableButtonEnhancement>
+              <Button appearance="secondary">Cancel</Button>
+            </DialogTrigger>
+          </DialogActions>
+        </DialogBody>
+      </DialogSurface>
+    </Dialog>
   );
 };
