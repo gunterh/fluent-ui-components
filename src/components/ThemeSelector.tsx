@@ -7,6 +7,7 @@ const useStyles = makeStyles({
     position: "fixed",
     right: "1rem",
     top: "1rem",
+    zIndex: 9,
   },
 });
 
