@@ -13,7 +13,15 @@ import {
   Input,
   useId,
 } from "@fluentui/react-components";
-import { bundleIcon, DeleteFilled, DeleteRegular } from "@fluentui/react-icons";
+import {
+  ArrowDownFilled,
+  ArrowDownRegular,
+  ArrowUpFilled,
+  ArrowUpRegular,
+  bundleIcon,
+  DeleteFilled,
+  DeleteRegular,
+} from "@fluentui/react-icons";
 import { Fragment, useEffect, useRef, useState } from "react";
 
 // Styles
@@ -41,6 +49,12 @@ const useStyles = makeStyles({
     alignItems: "center",
     gap: tokens.spacingVerticalL,
   },
+  gridSorting: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr",
+    alignItems: "center",
+    gap: tokens.spacingVerticalL,
+  },
   input: {
     width: "50px",
   },
@@ -57,12 +71,15 @@ interface ListItem {
 
 // Icons
 const DeleteIcon = bundleIcon(DeleteFilled, DeleteRegular);
+const ArrowUpIcon = bundleIcon(ArrowUpFilled, ArrowUpRegular);
+const ArrowDownIcon = bundleIcon(ArrowDownFilled, ArrowDownRegular);
 
 export const ShoppingList = () => {
   const [items, setItems] = useState<ListItem[]>(() => {
     const items = localStorage.getItem("items");
     return items ? JSON.parse(items) : [];
   });
+  const [isSorting, setIsSorting] = useState(false);
   const beforeLabelId = useId("before-label");
 
   useEffect(() => {
@@ -106,6 +123,28 @@ export const ShoppingList = () => {
     localStorage.setItem("items", JSON.stringify(value));
   };
 
+  const moveItemUp = (index: number) => {
+    if (index === 0) return;
+    setItems((_items) => {
+      const items = [..._items];
+      const temp = items[index - 1];
+      items[index - 1] = items[index];
+      items[index] = temp;
+      return items;
+    });
+  };
+
+  const moveItemDown = (index: number) => {
+    if (index === items.length - 1) return;
+    setItems((_items) => {
+      const items = [..._items];
+      const temp = items[index + 1];
+      items[index + 1] = items[index];
+      items[index] = temp;
+      return items;
+    });
+  };
+
   return (
     <div className={classes.root}>
       <div className={classes.header}>
@@ -119,41 +158,65 @@ export const ShoppingList = () => {
           })}
         </Text>
         <AddItem onAddItem={handleAddItem} />
+        <Button
+          appearance="primary"
+          onClick={() => setIsSorting((prev) => !prev)}
+        >
+          {isSorting ? "Done" : "Sort"}
+        </Button>
       </div>
 
-      <div className={classes.grid}>
-        {items.map((item) => (
+      <div className={isSorting ? classes.gridSorting : classes.grid}>
+        {items.map((item, index) => (
           <Fragment key={item.name}>
             <Text size={400}>{item.name}</Text>
-            <Input
-              type="number"
-              name={item.name}
-              value={item.quantity.toString()}
-              className={classes.input}
-              onChange={handleUpdateQuantity}
-              contentBefore={
-                <Text size={400} id={beforeLabelId}>
-                  x
-                </Text>
-              }
-            />
-            <Input
-              type="number"
-              name={item.name}
-              value={item.price ? item.price.toString() : ""}
-              className={classes.inputPrice}
-              onChange={handleUpdatePrice}
-              contentBefore={
-                <Text size={400} id={beforeLabelId}>
-                  $
-                </Text>
-              }
-            />
-            <Button
-              icon={<DeleteIcon />}
-              appearance="transparent"
-              onClick={() => handleDeleteItem(item.name)}
-            />
+            {isSorting ? (
+              <Button
+                icon={<ArrowUpIcon />}
+                appearance="transparent"
+                onClick={() => moveItemUp(index)}
+              />
+            ) : (
+              <Input
+                type="number"
+                name={item.name}
+                value={item.quantity.toString()}
+                className={classes.input}
+                onChange={handleUpdateQuantity}
+                contentBefore={
+                  <Text size={400} id={beforeLabelId}>
+                    x
+                  </Text>
+                }
+              />
+            )}
+            {isSorting ? (
+              <Button
+                icon={<ArrowDownIcon />}
+                appearance="transparent"
+                onClick={() => moveItemDown(index)}
+              />
+            ) : (
+              <Input
+                type="number"
+                name={item.name}
+                value={item.price ? item.price.toString() : ""}
+                className={classes.inputPrice}
+                onChange={handleUpdatePrice}
+                contentBefore={
+                  <Text size={400} id={beforeLabelId}>
+                    $
+                  </Text>
+                }
+              />
+            )}
+            {!isSorting && (
+              <Button
+                icon={<DeleteIcon />}
+                appearance="transparent"
+                onClick={() => handleDeleteItem(item.name)}
+              />
+            )}
           </Fragment>
         ))}
       </div>
