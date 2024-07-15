@@ -31,6 +31,7 @@ const useStyles = makeStyles({
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
+    padding: tokens.spacingVerticalL,
   },
   header: {
     background: tokens.colorNeutralBackground1,
@@ -51,7 +52,7 @@ const useStyles = makeStyles({
   },
   gridSorting: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
+    gridTemplateColumns: "1fr auto auto",
     alignItems: "center",
     gap: tokens.spacingVerticalL,
   },
