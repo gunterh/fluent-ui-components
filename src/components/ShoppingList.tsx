@@ -23,6 +23,8 @@ import {
   DeleteRegular,
 } from "@fluentui/react-icons";
 import { Fragment, useEffect, useRef, useState } from "react";
+import { CopyLocalStorage } from "./CopyLocalStorage";
+import { ImportFromLocalStorage } from "./ImportFromLocalStorage";
 
 // Styles
 const useStyles = makeStyles({
@@ -64,7 +66,7 @@ const useStyles = makeStyles({
   },
 });
 
-interface ListItem {
+export interface ListItem {
   name: string;
   price?: number;
   quantity: number;
@@ -80,7 +82,7 @@ export const ShoppingList = () => {
     const items = localStorage.getItem("items");
     return items ? JSON.parse(items) : [];
   });
-  const [isSorting, setIsSorting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const beforeLabelId = useId("before-label");
 
   useEffect(() => {
@@ -147,81 +149,93 @@ export const ShoppingList = () => {
   };
 
   return (
-    <div className={classes.root}>
-      <div className={classes.header}>
-        <Text block size={800}>
-          Shopping List
-        </Text>
-        <Text block align="center" size={800} weight="bold">
-          {total.toLocaleString("en-AU", {
-            style: "currency",
-            currency: "AUD",
-          })}
-        </Text>
-        <AddItem onAddItem={handleAddItem} />
-        <Button
-          appearance="primary"
-          onClick={() => setIsSorting((prev) => !prev)}
-        >
-          {isSorting ? "Done" : "Sort"}
-        </Button>
-      </div>
+    <>
+      {isEditing ? (
+        <ImportFromLocalStorage
+          onImport={(items) => {
+            setItems(items);
+          }}
+        />
+      ) : (
+        <CopyLocalStorage />
+      )}
 
-      <div className={isSorting ? classes.gridSorting : classes.grid}>
-        {items.map((item, index) => (
-          <Fragment key={item.name}>
-            <Text size={400}>{item.name}</Text>
-            {isSorting ? (
-              <Button
-                icon={<ArrowUpIcon />}
-                appearance="transparent"
-                onClick={() => moveItemUp(index)}
-              />
-            ) : (
-              <Input
-                type="number"
-                name={item.name}
-                value={item.quantity.toString()}
-                className={classes.input}
-                onChange={handleUpdateQuantity}
-                contentBefore={
-                  <Text size={400} id={beforeLabelId}>
-                    x
-                  </Text>
-                }
-              />
-            )}
-            {isSorting ? (
-              <Button
-                icon={<ArrowDownIcon />}
-                appearance="transparent"
-                onClick={() => moveItemDown(index)}
-              />
-            ) : (
-              <Input
-                type="number"
-                name={item.name}
-                value={item.price ? item.price.toString() : ""}
-                className={classes.inputPrice}
-                onChange={handleUpdatePrice}
-                contentBefore={
-                  <Text size={400} id={beforeLabelId}>
-                    $
-                  </Text>
-                }
-              />
-            )}
-            {!isSorting && (
-              <Button
-                icon={<DeleteIcon />}
-                appearance="transparent"
-                onClick={() => handleDeleteItem(item.name)}
-              />
-            )}
-          </Fragment>
-        ))}
+      <div className={classes.root}>
+        <div className={classes.header}>
+          <Text block size={800}>
+            Shopping List
+          </Text>
+          <Text block align="center" size={800} weight="bold">
+            {total.toLocaleString("en-AU", {
+              style: "currency",
+              currency: "AUD",
+            })}
+          </Text>
+          <AddItem onAddItem={handleAddItem} />
+          <Button
+            appearance="primary"
+            onClick={() => setIsEditing((prev) => !prev)}
+          >
+            {isEditing ? "Done" : "Edit"}
+          </Button>
+        </div>
+
+        <div className={isEditing ? classes.gridSorting : classes.grid}>
+          {items.map((item, index) => (
+            <Fragment key={item.name}>
+              <Text size={400}>{item.name}</Text>
+              {isEditing ? (
+                <Button
+                  icon={<ArrowUpIcon />}
+                  appearance="transparent"
+                  onClick={() => moveItemUp(index)}
+                />
+              ) : (
+                <Input
+                  type="number"
+                  name={item.name}
+                  value={item.quantity.toString()}
+                  className={classes.input}
+                  onChange={handleUpdateQuantity}
+                  contentBefore={
+                    <Text size={400} id={beforeLabelId}>
+                      x
+                    </Text>
+                  }
+                />
+              )}
+              {isEditing ? (
+                <Button
+                  icon={<ArrowDownIcon />}
+                  appearance="transparent"
+                  onClick={() => moveItemDown(index)}
+                />
+              ) : (
+                <Input
+                  type="number"
+                  name={item.name}
+                  value={item.price ? item.price.toString() : ""}
+                  className={classes.inputPrice}
+                  onChange={handleUpdatePrice}
+                  contentBefore={
+                    <Text size={400} id={beforeLabelId}>
+                      $
+                    </Text>
+                  }
+                />
+              )}
+              {!isEditing && (
+                <Button
+                  icon={<DeleteIcon />}
+                  appearance="transparent"
+                  onClick={() => handleDeleteItem(item.name)}
+                />
+              )}
+            </Fragment>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

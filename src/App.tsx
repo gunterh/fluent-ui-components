@@ -32,6 +32,7 @@ export const App = () => {
     <FluentProvider theme={theme}>
       <ApplyToBody />
       <ThemeSelector Icon={Icon} onToggleTheme={toggleTheme} />
+
       <ShoppingList />
     </FluentProvider>
   );
