@@ -18,6 +18,7 @@ import {
 } from "@fluentui/react-icons";
 import { ListItem } from "./ShoppingList";
 import { useRef } from "react";
+import { getItemsFromJsonString } from "../lib/utils";
 
 // Styles
 const useStyles = makeStyles({
@@ -60,9 +61,9 @@ export const ImportFromLocalStorage = (props: {
               <Button
                 appearance="primary"
                 onClick={() => {
-                  const items = JSON.parse(
+                  const items = getItemsFromJsonString(
                     ref.current?.value || "[]"
-                  ) as ListItem[];
+                  );
 
                   props.onImport(items);
                 }}

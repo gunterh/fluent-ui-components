@@ -26,6 +26,8 @@ import {
 import { Fragment, useEffect, useRef, useState } from "react";
 import { CopyLocalStorage } from "./CopyLocalStorage";
 import { ImportFromLocalStorage } from "./ImportFromLocalStorage";
+import Decimal from "decimal.js-light";
+import { getItemsFromJsonString, getJsonStringFromItems } from "../lib/utils";
 
 // Styles
 const useStyles = makeStyles({
@@ -47,29 +49,36 @@ const useStyles = makeStyles({
     zIndex: 1,
     justifyContent: "center",
   },
-  grid: {
+  gridButtons: {
     display: "grid",
-    gridTemplateColumns: "1fr auto 1fr auto",
+    gap: tokens.spacingVerticalM,
+  },
+  grid: {
+    width: "100%",
+    display: "grid",
+    gridTemplateColumns: "auto 1fr 1fr",
     alignItems: "center",
     gap: tokens.spacingVerticalL,
   },
   gridSorting: {
     display: "grid",
-    gridTemplateColumns: "1fr auto auto",
+    gridTemplateColumns: "1fr auto auto auto",
     alignItems: "center",
     gap: tokens.spacingVerticalL,
   },
   input: {
-    width: "50px",
+    width: "70px",
+    fontSize: "0.8rem",
   },
   inputPrice: {
-    width: "100px",
+    width: "80px",
+    fontSize: "0.8rem",
   },
 });
 
 export interface ListItem {
   name: string;
-  price?: number;
+  price?: Decimal;
   quantity: number;
 }
 
@@ -81,7 +90,7 @@ const ArrowDownIcon = bundleIcon(ArrowDownFilled, ArrowDownRegular);
 export const ShoppingList = () => {
   const [items, setItems] = useState<ListItem[]>(() => {
     const items = localStorage.getItem("items");
-    return items ? JSON.parse(items) : [];
+    return items ? getItemsFromJsonString(items) : [];
   });
   const [isEditing, setIsEditing] = useState(false);
   const beforeLabelId = useId("before-label");
@@ -92,10 +101,10 @@ export const ShoppingList = () => {
   }, [items]);
 
   const classes = useStyles();
-  const total = items.reduce(
-    (acc, item) => acc + (item.price || 0) * item.quantity,
-    0
-  );
+  const total = items.reduce((acc, item) => {
+    const newAcc = acc.add(item.price ? item.price.times(item.quantity) : 0);
+    return newAcc;
+  }, new Decimal(0));
 
   const handleDeleteItem = (name: string) => {
     setItems((_items) => _items.filter((item) => item.name !== name));
@@ -120,12 +129,14 @@ export const ShoppingList = () => {
     const price = parseFloat(e.target.value);
     if (price > 9999) return;
     setItems((_items) =>
-      _items.map((item) => (item.name === name ? { ...item, price } : item))
+      _items.map((item) =>
+        item.name === name ? { ...item, price: new Decimal(price) } : item
+      )
     );
   };
 
   const saveItemsInLocalStorage = (value: ListItem[]) => {
-    localStorage.setItem("items", JSON.stringify(value));
+    localStorage.setItem("items", getJsonStringFromItems(value));
   };
 
   const moveItemUp = (index: number) => {
@@ -163,16 +174,7 @@ export const ShoppingList = () => {
       )}
 
       <div className={classes.root}>
-        <div className={classes.header}>
-          <Text block size={800}>
-            Omega Shopping List
-          </Text>
-          <Text block align="center" size={800} weight="bold">
-            {total.toLocaleString("en-AU", {
-              style: "currency",
-              currency: "AUD",
-            })}
-          </Text>
+        <div className={classes.gridButtons}>
           <AddItem onAddItem={handleAddItem} />
           <Button
             appearance="primary"
@@ -180,6 +182,14 @@ export const ShoppingList = () => {
           >
             {isEditing ? "Done" : "Edit"}
           </Button>
+        </div>
+        <div className={classes.header}>
+          <Text block align="center" size={600} weight="bold">
+            {total.toNumber().toLocaleString("en-AU", {
+              style: "currency",
+              currency: "AUD",
+            })}
+          </Text>
           <SearchBox
             placeholder="Search"
             value={searchString}
@@ -193,7 +203,9 @@ export const ShoppingList = () => {
             )
             .map((item, index) => (
               <Fragment key={item.name}>
-                <Text size={400}>{item.name}</Text>
+                <Text block size={200}>
+                  {item.name}
+                </Text>
                 {isEditing ? (
                   <Button
                     icon={<ArrowUpIcon />}
@@ -208,7 +220,7 @@ export const ShoppingList = () => {
                     className={classes.input}
                     onChange={handleUpdateQuantity}
                     contentBefore={
-                      <Text size={400} id={beforeLabelId}>
+                      <Text size={200} id={beforeLabelId}>
                         x
                       </Text>
                     }
@@ -228,15 +240,16 @@ export const ShoppingList = () => {
                     className={classes.inputPrice}
                     onChange={handleUpdatePrice}
                     contentBefore={
-                      <Text size={400} id={beforeLabelId}>
+                      <Text size={100} id={beforeLabelId}>
                         $
                       </Text>
                     }
                   />
                 )}
-                {!isEditing && (
+                {isEditing && (
                   <Button
                     icon={<DeleteIcon />}
+                    size="small"
                     appearance="transparent"
                     onClick={() => handleDeleteItem(item.name)}
                   />
