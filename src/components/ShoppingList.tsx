@@ -12,6 +12,7 @@ import {
   DialogActions,
   Input,
   useId,
+  SearchBox,
 } from "@fluentui/react-components";
 import {
   ArrowDownFilled,
@@ -84,6 +85,7 @@ export const ShoppingList = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const beforeLabelId = useId("before-label");
+  const [searchString, setSearchString] = useState("");
 
   useEffect(() => {
     saveItemsInLocalStorage(items);
@@ -178,61 +180,69 @@ export const ShoppingList = () => {
           >
             {isEditing ? "Done" : "Edit"}
           </Button>
+          <SearchBox
+            placeholder="Search"
+            value={searchString}
+            onChange={(_, data) => setSearchString(data.value)}
+          />
         </div>
-
         <div className={isEditing ? classes.gridSorting : classes.grid}>
-          {items.map((item, index) => (
-            <Fragment key={item.name}>
-              <Text size={400}>{item.name}</Text>
-              {isEditing ? (
-                <Button
-                  icon={<ArrowUpIcon />}
-                  appearance="transparent"
-                  onClick={() => moveItemUp(index)}
-                />
-              ) : (
-                <Input
-                  type="number"
-                  name={item.name}
-                  value={item.quantity.toString()}
-                  className={classes.input}
-                  onChange={handleUpdateQuantity}
-                  contentBefore={
-                    <Text size={400} id={beforeLabelId}>
-                      x
-                    </Text>
-                  }
-                />
-              )}
-              {isEditing ? (
-                <Button
-                  icon={<ArrowDownIcon />}
-                  appearance="transparent"
-                  onClick={() => moveItemDown(index)}
-                />
-              ) : (
-                <Input
-                  type="number"
-                  name={item.name}
-                  value={item.price ? item.price.toString() : ""}
-                  className={classes.inputPrice}
-                  onChange={handleUpdatePrice}
-                  contentBefore={
-                    <Text size={400} id={beforeLabelId}>
-                      $
-                    </Text>
-                  }
-                />
-              )}
-              {!isEditing && (
-                <Button
-                  icon={<DeleteIcon />}
-                  appearance="transparent"
-                  onClick={() => handleDeleteItem(item.name)}
-                />
-              )}
-            </Fragment>
-          ))}
+          {items
+            .filter((item) =>
+              item.name.toLowerCase().includes(searchString.toLowerCase())
+            )
+            .map((item, index) => (
+              <Fragment key={item.name}>
+                <Text size={400}>{item.name}</Text>
+                {isEditing ? (
+                  <Button
+                    icon={<ArrowUpIcon />}
+                    appearance="transparent"
+                    onClick={() => moveItemUp(index)}
+                  />
+                ) : (
+                  <Input
+                    type="number"
+                    name={item.name}
+                    value={item.quantity.toString()}
+                    className={classes.input}
+                    onChange={handleUpdateQuantity}
+                    contentBefore={
+                      <Text size={400} id={beforeLabelId}>
+                        x
+                      </Text>
+                    }
+                  />
+                )}
+                {isEditing ? (
+                  <Button
+                    icon={<ArrowDownIcon />}
+                    appearance="transparent"
+                    onClick={() => moveItemDown(index)}
+                  />
+                ) : (
+                  <Input
+                    type="number"
+                    name={item.name}
+                    value={item.price ? item.price.toString() : ""}
+                    className={classes.inputPrice}
+                    onChange={handleUpdatePrice}
+                    contentBefore={
+                      <Text size={400} id={beforeLabelId}>
+                        $
+                      </Text>
+                    }
+                  />
+                )}
+                {!isEditing && (
+                  <Button
+                    icon={<DeleteIcon />}
+                    appearance="transparent"
+                    onClick={() => handleDeleteItem(item.name)}
+                  />
+                )}
+              </Fragment>
+            ))}
         </div>
       </div>
     </>
