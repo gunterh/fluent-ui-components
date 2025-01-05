@@ -165,7 +165,7 @@ export const ShoppingList = () => {
       <div className={classes.root}>
         <div className={classes.header}>
           <Text block size={800}>
-            Shopping List
+            Omega Shopping List
           </Text>
           <Text block align="center" size={800} weight="bold">
             {total.toLocaleString("en-AU", {
