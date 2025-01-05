@@ -117,7 +117,10 @@ export const ShoppingList = () => {
 
   const handleUpdateQuantity = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name;
-    const quantity = parseInt(e.target.value);
+    let quantity = parseInt(e.target.value);
+    if (isNaN(quantity)) {
+      quantity = 0;
+    }
     if (quantity > 99) return;
     setItems((_items) =>
       _items.map((item) => (item.name === name ? { ...item, quantity } : item))
@@ -126,7 +129,10 @@ export const ShoppingList = () => {
 
   const handleUpdatePrice = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name;
-    const price = parseFloat(e.target.value);
+    let price = parseFloat(e.target.value);
+    if (isNaN(price)) {
+      price = 0;
+    }
     if (price > 9999) return;
     setItems((_items) =>
       _items.map((item) =>
