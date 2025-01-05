@@ -188,6 +188,16 @@ export const ShoppingList = () => {
           >
             {isEditing ? "Done" : "Edit"}
           </Button>
+          <Button
+            appearance="secondary"
+            onClick={() =>
+              setItems((items) =>
+                items.map((item) => ({ ...item, quantity: 0 }))
+              )
+            }
+          >
+            Clear all quantities
+          </Button>
         </div>
         <div className={classes.header}>
           <Text block align="center" size={600} weight="bold">
